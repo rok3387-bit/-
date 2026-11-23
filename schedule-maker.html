@@ -116,11 +116,30 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .warn { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; }
 .memo {
-  margin: 0; font-family: var(--f-mono); font-size: 15px; line-height: 28px; white-space: pre; overflow-x: auto;
+  display: block; width: 100%; margin: 0; resize: none; overflow-y: hidden; overflow-x: auto;
+  font-family: var(--f-mono); font-size: 15px; line-height: 28px; white-space: pre;
   background: var(--memo); color: var(--ink); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px;
   background-image: repeating-linear-gradient(to bottom, transparent 0 27px, var(--memo-rule) 27px 28px);
-  background-position: 0 14px; font-variant-numeric: tabular-nums;
+  background-position: 0 14px; background-attachment: local; font-variant-numeric: tabular-nums;
+  caret-color: var(--accent);
 }
+.memo:hover { border-color: var(--grid-strong); }
+.memo:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+.edited {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+  background: var(--accent-soft); color: var(--ink); border-radius: 8px; padding: 8px 12px; font-size: 0.86rem;
+}
+.edited button, .tt-x, .tt-show {
+  font: inherit; font-size: 0.82rem; font-weight: 700; cursor: pointer; border-radius: 6px; padding: 4px 10px;
+  background: transparent; color: var(--accent); border: 1.5px solid var(--accent);
+}
+.tt-wrap { display: grid; gap: 8px; min-width: 0; }
+.tt-bar { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: var(--muted); }
+.tt-x { border-color: var(--line); color: var(--muted); }
+.tt-x:hover { color: var(--ink); border-color: var(--muted); }
+.tt-show { margin-top: 12px; }
+.hero.solo { grid-template-columns: minmax(0, 1fr); }
+[hidden] { display: none !important; }
 .hint { font-size: 0.82rem; color: var(--muted); margin: 0; }
 .toast { font-size: 0.85rem; color: var(--accent); font-weight: 700; min-height: 1.2em; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -132,7 +151,10 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       <div class="eyebrow">하루 시간표 → 메모 한 장</div>
       <h1>메모장 일과표 만들기</h1>
       <p>누구를 위한 일과표인지 적기만 하면 시간표가 자동으로 짜여요. 복사해서 휴대폰 메모장에 붙여 두고 다니세요.</p>
+      <button type="button" class="tt-show" id="ttShow" hidden>예시 시간표 다시 보기</button>
     </div>
+    <div class="tt-wrap" id="ttWrap">
+    <div class="tt-bar"><span>예시 시간표</span><button type="button" class="tt-x" id="ttHide" aria-label="위 시간표 숨기기">숨기기 ✕</button></div>
     <div class="tt" aria-hidden="true">
       <div></div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div>
       <div class="p">1</div><div class="s1">국어</div><div class="s2">수학</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2">수학</div>
@@ -140,6 +162,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       <div class="p">3</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2 now">수학</div><div class="s1">국어</div><div class="s5">사회</div>
       <div class="p">4</div><div class="s6">음악</div><div class="s1">국어</div><div class="s6">체육</div><div class="s3">영어</div><div class="s4">과학</div>
       <div class="p">5</div><div class="s5">사회</div><div class="s3">영어</div><div class="e"></div><div class="s2">수학</div><div class="s6">미술</div>
+    </div>
     </div>
   </header>
 
@@ -187,8 +210,10 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
         </div>
       </div>
       <div class="warn" id="warn" hidden></div>
-      <pre class="memo" id="memo" tabindex="0"></pre>
+      <div class="edited" id="edited" hidden><span>직접 고친 내용을 지키고 있어요. 설정을 바꿔도 덮어쓰지 않아요.</span><button type="button" id="regen">설정대로 다시 만들기</button></div>
+      <textarea class="memo" id="memo" spellcheck="false" rows="10" aria-label="일과표 메모. 직접 고칠 수 있어요"></textarea>
       <div class="toast" id="toast"></div>
+      <p class="hint">메모를 눌러 글자를 고치거나 줄을 추가할 수 있어요. 예: 시간을 바꾸거나 "21:00  일기 쓰기"처럼 새 줄 넣기.</p>
       <p class="hint">복사한 다음 휴대폰 메모장이나 카카오톡 ‘나와의 채팅’에 붙여 넣으면 들고 다니기 좋아요.</p>
     </section>
   </div>
@@ -315,6 +340,7 @@ function makeProfile(inf) {
 }
 
 let profile = null;
+let edited = false;
 let signature = '';
 
 function readConfig() {
@@ -523,7 +549,7 @@ function render() {
     lines.push('', '[규칙]');
     profile.rules.forEach(r => lines.push('- ' + r));
   }
-  $('memo').textContent = lines.join('\n');
+  if (!edited) { $('memo').value = lines.join('\n'); autosize(); }
   $('warn').hidden = !warn.length;
   $('warn').textContent = warn.join(' ');
   $('acadBox').setAttribute('aria-disabled', String(!c.ac));
@@ -531,11 +557,7 @@ function render() {
   $('toast').textContent = '';
 }
 
-function selectMemo() {
-  const r = document.createRange();
-  r.selectNodeContents($('memo'));
-  const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
-}
+function selectMemo() { const m = $('memo'); m.focus(); m.select(); }
 
 $('examples').innerHTML = EXAMPLES.map(e => `<button type="button">${e}</button>`).join('');
 $('examples').addEventListener('click', e => {
@@ -550,13 +572,42 @@ $('form').addEventListener('input', e => { if (e.target.id !== 'who') render(); 
 $('form').addEventListener('submit', e => e.preventDefault());
 
 $('copy').addEventListener('click', () => {
-  const text = $('memo').textContent;
+  const text = $('memo').value;
   const done = () => { $('toast').textContent = '복사했어요. 메모장에 붙여 넣으세요.'; };
   const fallback = () => { selectMemo(); $('toast').textContent = '자동 복사가 막혀 있어요. 선택된 글을 길게 눌러 복사하세요.'; };
   try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
 });
 $('select').addEventListener('click', () => { selectMemo(); $('toast').textContent = '전체 선택했어요.'; });
 
+// 직접 고치기
+function autosize() { const m = $('memo'); m.style.height = 'auto'; m.style.height = (m.scrollHeight + 2) + 'px'; }
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+};
+$('memo').addEventListener('input', () => {
+  edited = true; $('edited').hidden = false; autosize();
+  store.set('memo-draft', $('memo').value);
+});
+$('regen').addEventListener('click', () => {
+  edited = false; $('edited').hidden = true; store.set('memo-draft', null); render();
+});
+window.addEventListener('resize', autosize);
+
+// 위 시간표 숨기기
+function setTT(hidden) {
+  $('ttWrap').hidden = hidden; $('ttShow').hidden = !hidden;
+  document.querySelector('.hero').classList.toggle('solo', hidden);
+  store.set('tt-hidden', hidden ? '1' : null);
+}
+$('ttHide').addEventListener('click', () => setTT(true));
+$('ttShow').addEventListener('click', () => setTT(false));
+if (store.get('tt-hidden')) setTT(true);
+
 $('who').value = '공부에 집중하고 싶은 중학생';
 applyWho(true);
+const draft = store.get('memo-draft');
+if (draft && draft !== $('memo').value) {
+  edited = true; $('memo').value = draft; $('edited').hidden = false; autosize();
+}
 </script>
