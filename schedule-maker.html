@@ -139,6 +139,30 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .tt-x:hover { color: var(--ink); border-color: var(--muted); }
 .tt-show { margin-top: 12px; }
 .hero.solo { grid-template-columns: minmax(0, 1fr); }
+.tt input.cell {
+  font: inherit; font-size: 0.8rem; text-align: center; width: 100%; min-width: 0; color: var(--ink);
+  border: 1px solid transparent; border-radius: 6px; padding: 6px 2px; background: var(--surface);
+}
+.tt input.cell.s1 { background: var(--s1); }
+.tt input.cell.s2 { background: var(--s2); }
+.tt input.cell.s3 { background: var(--s3); }
+.tt input.cell.s4 { background: var(--s4); }
+.tt input.cell.s5 { background: var(--s5); }
+.tt input.cell.s6 { background: var(--s6); }
+.tt input.cell:placeholder-shown { border: 1px dashed var(--line); background: transparent; }
+.tt input.cell:hover { border-color: var(--grid-strong); }
+.tt input.cell:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+.tt .h.today { color: var(--accent); }
+.tt-title { font-weight: 700; color: var(--ink); }
+.tt-title small { font-weight: 400; color: var(--muted); margin-left: 4px; }
+.tt-tools { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.tt-btn {
+  font: inherit; font-size: 0.78rem; font-weight: 500; cursor: pointer; border-radius: 6px; padding: 4px 9px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line);
+}
+.tt-btn:hover { border-color: var(--accent); color: var(--accent); }
+.tt-btn.danger { border-color: var(--warn-ink); color: var(--warn-ink); background: var(--warn-bg); }
+.tt-saved { font-size: 0.78rem; color: var(--accent); font-weight: 700; }
 [hidden] { display: none !important; }
 .hint { font-size: 0.82rem; color: var(--muted); margin: 0; }
 .toast { font-size: 0.85rem; color: var(--accent); font-weight: 700; min-height: 1.2em; }
@@ -150,18 +174,21 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
     <div>
       <div class="eyebrow">하루 시간표 → 메모 한 장</div>
       <h1>메모장 일과표 만들기</h1>
-      <p>누구를 위한 일과표인지 적기만 하면 시간표가 자동으로 짜여요. 복사해서 휴대폰 메모장에 붙여 두고 다니세요.</p>
-      <button type="button" class="tt-show" id="ttShow" hidden>예시 시간표 다시 보기</button>
+      <p>누구를 위한 일과표인지 적기만 하면 일과표가 자동으로 짜여요. 옆에는 우리 반 시간표를 적어 둘 수 있어요. 복사해서 휴대폰 메모장에 붙여 두고 다니세요.</p>
+      <button type="button" class="tt-show" id="ttShow" hidden>우리 반 시간표 다시 보기</button>
     </div>
     <div class="tt-wrap" id="ttWrap">
-    <div class="tt-bar"><span>예시 시간표</span><button type="button" class="tt-x" id="ttHide" aria-label="위 시간표 숨기기">숨기기 ✕</button></div>
-    <div class="tt" aria-hidden="true">
-      <div></div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div>
-      <div class="p">1</div><div class="s1">국어</div><div class="s2">수학</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2">수학</div>
-      <div class="p">2</div><div class="s2">수학</div><div class="s5">사회</div><div class="s1">국어</div><div class="s6">체육</div><div class="s3">영어</div>
-      <div class="p">3</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2 now">수학</div><div class="s1">국어</div><div class="s5">사회</div>
-      <div class="p">4</div><div class="s6">음악</div><div class="s1">국어</div><div class="s6">체육</div><div class="s3">영어</div><div class="s4">과학</div>
-      <div class="p">5</div><div class="s5">사회</div><div class="s3">영어</div><div class="e"></div><div class="s2">수학</div><div class="s6">미술</div>
+    <div class="tt-bar">
+      <span class="tt-title">우리 반 시간표 <small>칸을 눌러 과목을 쓰세요</small></span>
+      <button type="button" class="tt-x" id="ttHide" aria-label="위 시간표 숨기기">숨기기 ✕</button>
+    </div>
+    <div class="tt" id="tt"></div>
+    <div class="tt-tools">
+      <button type="button" class="tt-btn" id="ttAdd">+ 교시 추가</button>
+      <button type="button" class="tt-btn" id="ttDel">− 교시 빼기</button>
+      <button type="button" class="tt-btn" id="ttClear">모두 지우기</button>
+      <button type="button" class="tt-btn" id="ttSample">예시로 되돌리기</button>
+      <span class="tt-saved" id="ttSaved"></span>
     </div>
     </div>
   </header>
@@ -603,6 +630,72 @@ function setTT(hidden) {
 $('ttHide').addEventListener('click', () => setTT(true));
 $('ttShow').addEventListener('click', () => setTT(false));
 if (store.get('tt-hidden')) setTT(true);
+
+// 우리 반 시간표 (직접 쓰기)
+const DAYS = ['월', '화', '수', '목', '금'];
+const SAMPLE = [
+  ['국어', '수학', '영어', '과학', '수학'], ['수학', '사회', '국어', '체육', '영어'], ['영어', '과학', '수학', '국어', '사회'],
+  ['음악', '국어', '체육', '영어', '과학'], ['사회', '영어', '', '수학', '미술'], ['과학', '도덕', '', '기술', '국어']
+];
+const COLORS = { 국어: 1, 문학: 1, 독서: 1, 화법: 1, 수학: 2, 영어: 3, 과학: 4, 물리: 4, 화학: 4, 생명: 4, 지구: 4,
+  사회: 5, 역사: 5, 한국사: 5, 도덕: 5, 지리: 5, 윤리: 5, 체육: 6, 음악: 6, 미술: 6 };
+const colorOf = v => {
+  v = v.trim(); if (!v) return '';
+  for (const k in COLORS) if (v.includes(k)) return 's' + COLORS[k];
+  let h = 0; for (const ch of v) h += ch.charCodeAt(0);
+  return 's' + (1 + h % 6);
+};
+let classTT;
+try { classTT = JSON.parse(store.get('class-tt')); } catch (e) { classTT = null; }
+if (!Array.isArray(classTT) || !classTT.length) classTT = SAMPLE.map(r => r.slice());
+const esc = v => v.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
+function drawTT() {
+  const today = new Date().getDay() - 1;
+  let h = '<div></div>' + DAYS.map((d, i) => `<div class="h${i === today ? ' today' : ''}">${d}</div>`).join('');
+  classTT.forEach((row, r) => {
+    h += `<div class="p">${r + 1}</div>`;
+    row.forEach((v, c) => {
+      h += `<input class="cell ${colorOf(v)}" data-r="${r}" data-c="${c}" value="${esc(v)}" maxlength="8" placeholder=" " aria-label="${DAYS[c]}요일 ${r + 1}교시">`;
+    });
+  });
+  $('tt').innerHTML = h;
+  $('ttDel').disabled = classTT.length <= 1;
+  $('ttAdd').disabled = classTT.length >= 10;
+}
+let savedTimer;
+function saveTT() {
+  store.set('class-tt', JSON.stringify(classTT));
+  $('ttSaved').textContent = '저장됨';
+  clearTimeout(savedTimer); savedTimer = setTimeout(() => { $('ttSaved').textContent = ''; }, 1500);
+}
+$('tt').addEventListener('input', e => {
+  const el = e.target; if (!el.classList.contains('cell')) return;
+  classTT[+el.dataset.r][+el.dataset.c] = el.value;
+  el.className = 'cell ' + colorOf(el.value);
+  saveTT();
+});
+$('tt').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !e.target.classList.contains('cell')) return;
+  e.preventDefault();
+  const r = +e.target.dataset.r + 1, c = +e.target.dataset.c;
+  const next = $('tt').querySelector(`[data-r="${r}"][data-c="${c}"]`) || $('tt').querySelector(`[data-r="0"][data-c="${(c + 1) % 5}"]`);
+  if (next) next.focus();
+});
+$('ttAdd').addEventListener('click', () => { classTT.push(['', '', '', '', '']); drawTT(); saveTT(); });
+$('ttDel').addEventListener('click', () => { if (classTT.length > 1) { classTT.pop(); drawTT(); saveTT(); } });
+let clearArmed = null;
+$('ttClear').addEventListener('click', () => {
+  const b = $('ttClear');
+  if (!clearArmed) {
+    b.textContent = '한 번 더 누르면 지워져요'; b.classList.add('danger');
+    clearArmed = setTimeout(() => { clearArmed = null; b.textContent = '모두 지우기'; b.classList.remove('danger'); }, 3000);
+    return;
+  }
+  clearTimeout(clearArmed); clearArmed = null; b.textContent = '모두 지우기'; b.classList.remove('danger');
+  classTT = classTT.map(r => r.map(() => '')); drawTT(); saveTT();
+});
+$('ttSample').addEventListener('click', () => { classTT = SAMPLE.map(r => r.slice()); drawTT(); saveTT(); });
+drawTT();
 
 $('who').value = '공부에 집중하고 싶은 중학생';
 applyWho(true);
