@@ -3,9 +3,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
-/* Layout: 왼쪽 설정 패널, 오른쪽 메모 미리보기. 좁은 화면에서는 위아래로 쌓인다. */
+/* Layout: 시간표 격자 배경 위에, 위쪽은 시간표 모양 머리말, 아래는 설정(왼쪽)과 메모 미리보기(오른쪽). 좁은 화면에서는 한 줄로 쌓인다. */
 :root {
   --bg: #eef2f0;
+  --grid: #dbe4df;
+  --grid-strong: #c9d6cf;
   --surface: #ffffff;
   --ink: #1b2420;
   --muted: #5c6a64;
@@ -17,49 +19,84 @@
   --memo-rule: #e6ece8;
   --warn-bg: #fff4dc;
   --warn-ink: #7a5200;
+  --s1: #f7d9cc; --s2: #d2e4f6; --s3: #d6eed9; --s4: #f4e6b0; --s5: #e2d8f3; --s6: #f2d4e2;
   --f-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
   --f-mono: "Nanum Gothic Coding", "D2Coding", ui-monospace, Menlo, Consolas, monospace;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #111614; --surface: #19201d; --ink: #e4ebe7; --muted: #94a39c; --line: #2c3632;
+    --bg: #111614; --grid: #1a221e; --grid-strong: #222c27; --surface: #19201d; --ink: #e4ebe7; --muted: #94a39c; --line: #2c3632;
     --accent: #5cc49a; --accent-ink: #0d1a14; --accent-soft: #1d3329; --memo: #151b18; --memo-rule: #222b27;
-    --warn-bg: #3a2d10; --warn-ink: #f3cf7a; color-scheme: dark;
+    --warn-bg: #3a2d10; --warn-ink: #f3cf7a;
+    --s1: #4d3329; --s2: #263d55; --s3: #29432f; --s4: #4b4220; --s5: #3a3050; --s6: #4a2d3e;
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #111614; --surface: #19201d; --ink: #e4ebe7; --muted: #94a39c; --line: #2c3632;
+  --bg: #111614; --grid: #1a221e; --grid-strong: #222c27; --surface: #19201d; --ink: #e4ebe7; --muted: #94a39c; --line: #2c3632;
   --accent: #5cc49a; --accent-ink: #0d1a14; --accent-soft: #1d3329; --memo: #151b18; --memo-rule: #222b27;
-  --warn-bg: #3a2d10; --warn-ink: #f3cf7a; color-scheme: dark;
+  --warn-bg: #3a2d10; --warn-ink: #f3cf7a;
+  --s1: #4d3329; --s2: #263d55; --s3: #29432f; --s4: #4b4220; --s5: #3a3050; --s6: #4a2d3e;
+  color-scheme: dark;
 }
 * { box-sizing: border-box; }
 body {
-  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.55;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grid-strong) 1.5px, transparent 1.5px),
+    linear-gradient(90deg, var(--grid-strong) 1.5px, transparent 1.5px),
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 240px 192px, 240px 192px, 48px 48px, 48px 48px;
   padding-left: max(16px, env(safe-area-inset-left, 0px));
   padding-right: max(16px, env(safe-area-inset-right, 0px));
   padding-block: 28px 48px;
 }
-.wrap { max-width: 1040px; margin: 0 auto; display: grid; gap: 24px; }
-header h1 { font-size: 1.6rem; margin: 0 0 4px; letter-spacing: -0.02em; text-wrap: balance; }
-header p { margin: 0; color: var(--muted); }
+.wrap { max-width: 1060px; margin: 0 auto; display: grid; gap: 24px; }
+
+/* 머리말: 시간표 한 장 */
+.hero {
+  background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 22px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px; align-items: center;
+}
+@media (max-width: 820px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+.hero h1 { font-size: 1.75rem; margin: 0 0 8px; letter-spacing: -0.02em; text-wrap: balance; }
+.hero p { margin: 0; color: var(--muted); max-width: 34em; }
+.eyebrow { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.08em; color: var(--accent); margin-bottom: 6px; }
+.tt {
+  display: grid; grid-template-columns: 2.6em repeat(5, minmax(0, 1fr)); gap: 4px;
+  font-size: 0.8rem; text-align: center; min-width: 0;
+}
+.tt > div { border-radius: 6px; padding: 6px 2px; line-height: 1.25; white-space: nowrap; overflow: hidden; }
+.tt .h { font-weight: 700; color: var(--muted); padding: 2px; }
+.tt .p { color: var(--muted); font-size: 0.72rem; display: grid; place-items: center; }
+.tt .e { border: 1px dashed var(--line); }
+.tt .now { outline: 2px solid var(--accent); outline-offset: -2px; font-weight: 700; }
+.s1 { background: var(--s1); } .s2 { background: var(--s2); } .s3 { background: var(--s3); }
+.s4 { background: var(--s4); } .s5 { background: var(--s5); } .s6 { background: var(--s6); }
+
 .grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 24px; align-items: start; }
 @media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
 .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 20px; display: grid; gap: 20px; min-width: 0; }
 .label { font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); margin: 0 0 8px; }
-.profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
-.profiles input { position: absolute; opacity: 0; pointer-events: none; }
-.profiles label {
-  display: grid; gap: 2px; padding: 10px 12px; border: 1.5px solid var(--line); border-radius: 10px; cursor: pointer;
-  background: var(--surface); transition: border-color .15s, background .15s;
+.who-input {
+  font: inherit; font-size: 1.05rem; color: var(--ink); background: var(--bg); width: 100%;
+  border: 2px solid var(--accent); border-radius: 10px; padding: 12px 14px;
 }
-.profiles label b { font-size: 0.95rem; }
-.profiles label span { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
-.profiles input:checked + label { border-color: var(--accent); background: var(--accent-soft); }
-.profiles input:focus-visible + label { outline: 2px solid var(--accent); outline-offset: 2px; }
+.examples { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.examples button {
+  font: inherit; font-size: 0.82rem; font-weight: 500; padding: 5px 10px; border-radius: 999px;
+  background: var(--surface); color: var(--ink); border: 1px solid var(--line); cursor: pointer;
+}
+.examples button:hover { border-color: var(--accent); }
+.understood { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 12px; font-size: 0.82rem; color: var(--muted); }
+.chip { background: var(--accent-soft); color: var(--accent); font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+.chip.guess { background: var(--warn-bg); color: var(--warn-ink); }
 .row { display: flex; flex-wrap: wrap; gap: 12px; }
 .field { display: grid; gap: 4px; flex: 1 1 120px; min-width: 0; }
 .field span { font-size: 0.82rem; color: var(--muted); }
-input[type="time"], input[type="text"] {
+input[type="time"], input[type="text"].sm {
   font: inherit; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 8px;
   padding: 8px 10px; width: 100%; min-width: 0; font-variant-numeric: tabular-nums;
 }
@@ -71,11 +108,11 @@ input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
 .memo-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
 .memo-head h2 { margin: 0; font-size: 1.05rem; }
 .btns { display: flex; gap: 8px; flex-wrap: wrap; }
-button {
+.btns button {
   font: inherit; font-weight: 700; font-size: 0.9rem; border-radius: 8px; padding: 9px 16px; cursor: pointer;
   border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink);
 }
-button.ghost { background: transparent; color: var(--accent); }
+.btns button.ghost { background: transparent; color: var(--accent); }
 button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .warn { background: var(--warn-bg); color: var(--warn-ink); border-radius: 8px; padding: 10px 12px; font-size: 0.88rem; }
 .memo {
@@ -90,20 +127,33 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 </style>
 
 <div class="wrap">
-  <header>
-    <h1>메모장 일과표 만들기</h1>
-    <p>누구를 위한 일과표인지 고르고 시간만 맞추면, 메모장에 바로 붙여 넣을 수 있는 짧은 일과표가 만들어져요.</p>
+  <header class="hero">
+    <div>
+      <div class="eyebrow">하루 시간표 → 메모 한 장</div>
+      <h1>메모장 일과표 만들기</h1>
+      <p>누구를 위한 일과표인지 적기만 하면 시간표가 자동으로 짜여요. 복사해서 휴대폰 메모장에 붙여 두고 다니세요.</p>
+    </div>
+    <div class="tt" aria-hidden="true">
+      <div></div><div class="h">월</div><div class="h">화</div><div class="h">수</div><div class="h">목</div><div class="h">금</div>
+      <div class="p">1</div><div class="s1">국어</div><div class="s2">수학</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2">수학</div>
+      <div class="p">2</div><div class="s2">수학</div><div class="s5">사회</div><div class="s1">국어</div><div class="s6">체육</div><div class="s3">영어</div>
+      <div class="p">3</div><div class="s3">영어</div><div class="s4">과학</div><div class="s2 now">수학</div><div class="s1">국어</div><div class="s5">사회</div>
+      <div class="p">4</div><div class="s6">음악</div><div class="s1">국어</div><div class="s6">체육</div><div class="s3">영어</div><div class="s4">과학</div>
+      <div class="p">5</div><div class="s5">사회</div><div class="s3">영어</div><div class="e"></div><div class="s2">수학</div><div class="s6">미술</div>
+    </div>
   </header>
 
   <div class="grid">
     <form class="panel" id="form" autocomplete="off">
       <div>
         <p class="label">누구를 위한 일과표인가요?</p>
-        <div class="profiles" id="profiles"></div>
+        <input type="text" class="who-input" id="who" maxlength="40" placeholder="예: 축구하는 중학생, 고3 수험생, 주말 초등학생">
+        <div class="examples" id="examples"></div>
+        <div class="understood" id="understood"></div>
       </div>
 
       <div>
-        <p class="label">시간</p>
+        <p class="label">시간 (자동으로 채워져요. 고쳐도 돼요)</p>
         <div class="row">
           <label class="field"><span>일어나는 시간</span><input type="time" id="wake"></label>
           <label class="field"><span>자는 시간</span><input type="time" id="sleep"></label>
@@ -113,7 +163,7 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       <div class="acad" id="acadBox">
         <label class="check"><input type="checkbox" id="ac"> 학원이나 야자처럼 고정된 일정이 있어요</label>
         <div class="row">
-          <label class="field"><span>일정 이름</span><input type="text" id="aName" maxlength="20"></label>
+          <label class="field"><span>일정 이름</span><input type="text" class="sm" id="aName" maxlength="20"></label>
           <label class="field"><span>시작</span><input type="time" id="aS"></label>
           <label class="field"><span>끝</span><input type="time" id="aE"></label>
         </div>
@@ -122,7 +172,6 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
       <div>
         <p class="label">메모 모양</p>
         <div class="row" style="flex-direction:column; gap:8px">
-          <label class="field" style="flex:none"><span>이름 (선택, 예: 민지)</span><input type="text" id="who" maxlength="12"></label>
           <label class="check"><input type="checkbox" id="range"> 끝나는 시간도 같이 쓰기 (20:00~20:50)</label>
           <label class="check"><input type="checkbox" id="rules" checked> 아래에 규칙 붙이기</label>
         </div>
@@ -146,71 +195,131 @@ button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 </div>
 
 <script>
-const PROFILES = {
-  ms: {
-    name: '중학생', desc: '학교와 학원, 숙제와 자유 시간의 균형', title: '평일 일과표', mode: 'basic',
-    wake: '07:00', sleep: '23:00', arrive: '08:20', school: '08:40', end: '15:40',
-    ac: true, aName: '학원', aS: '16:00', aE: '18:00',
-    tail: [['내일 준비물 챙기기', 10]],
-    rules: ['숙제는 저녁 먹고 바로 하기', '휴대폰은 자유 시간에만 보기', '11시 전에 자기']
-  },
-  focus: {
-    name: '공부 집중 중학생', desc: '50분 공부, 10분 휴식, 아침과 밤 암기', title: '평일 공부 일과표', mode: 'study',
-    wake: '06:50', sleep: '23:00', arrive: '08:20', school: '08:40', end: '15:40',
-    ac: true, aName: '학원', aS: '16:00', aE: '19:00', morning: '영단어 암기',
-    labels: ['{hw} 숙제', '오늘 수업 복습', '약한 과목 공부', '문제집 풀이', '다음 수업 예습'],
-    tail: [['암기 복습', 20], ['내일 계획 세우기, 가방 정리', 10]],
-    rules: ['공부할 때 휴대폰은 다른 방에 두기', '50분 공부하고 10분 쉬기', '배운 것은 그날 복습하기', '7~8시간은 꼭 자기']
-  },
-  hs: {
-    name: '고등학생', desc: '긴 수업, 늦게 끝나는 학원이나 야자', title: '고등학생 평일 일과표', mode: 'study',
-    wake: '06:30', sleep: '00:30', arrive: '07:50', school: '08:00', end: '16:30',
-    ac: true, aName: '학원', aS: '18:00', aE: '22:00', morning: '영단어·개념 암기',
-    labels: ['학교 과제, 수행평가', '오늘 수업 복습', '국·영·수 문제 풀이', '탐구 과목 정리', '오답 노트'],
-    tail: [['암기 복습', 20], ['내일 계획 세우기', 10]],
-    rules: ['50분 공부하고 10분 쉬기', '수업 내용은 그날 복습하기', '오답 노트는 매일 쓰기', '최소 6시간은 자기']
-  },
-  exam: {
-    name: '시험 기간', desc: '시험 2주 전, 과목별로 몰아서 공부', title: '시험 기간 일과표', mode: 'study',
-    wake: '06:30', sleep: '23:30', arrive: '08:20', school: '08:40', end: '15:40',
-    ac: true, aName: '학원', aS: '16:00', aE: '19:00', morning: '암기 과목 외우기',
-    labels: ['시험 과목 개념 정리', '기출·문제집 풀이', '오답 노트', '암기 과목 외우기', '시험 범위 전체 훑기'],
-    tail: [['오늘 외운 것 다시 보기', 20], ['내일 공부할 과목 정하기', 10]],
-    rules: ['시험 2주 전부터 이 표대로 하기', '휴대폰은 시험 끝날 때까지 최소한으로', '암기는 아침과 자기 전에', '시험 전날에도 6시간은 자기']
-  },
-  weekend: {
-    name: '주말', desc: '오전에 공부, 오후에 쉬고, 다음 주 준비', title: '주말 일과표', mode: 'weekend',
-    wake: '08:00', sleep: '23:00',
-    ac: true, aName: '학원', aS: '10:00', aE: '13:00',
-    rules: ['평일보다 1시간 넘게 늦잠 자지 않기', '공부는 오전에 먼저 끝내기', '자유 시간은 오후에 몰아서', '일요일 밤에 다음 주 계획 세우기']
-  }
+const EXAMPLES = ['공부에 집중하고 싶은 중학생', '중학생', '주말 중학생', '고등학생', '고3 수험생', '시험 기간 중학생', '초등학생', '축구하는 중학생', '방학 중인 고등학생', '재수생'];
+
+const LEVELS = {
+  es: { label: '초등학생', wake: '07:30', sleep: '22:00', arrive: '08:40', school: '09:00', end: '14:40', aS: '15:00', aE: '17:00', block: 40, morning: '영어 단어 읽기' },
+  ms: { label: '중학생', wake: '07:00', sleep: '23:00', arrive: '08:20', school: '08:40', end: '15:40', aS: '16:00', aE: '18:00', block: 50, morning: '영단어 암기' },
+  hs: { label: '고등학생', wake: '06:30', sleep: '00:30', arrive: '07:50', school: '08:00', end: '16:30', aS: '18:00', aE: '22:00', block: 50, morning: '영단어·개념 암기' },
+  retake: { label: '재수생', wake: '06:30', sleep: '00:00', arrive: '07:40', school: '08:00', end: '22:00', aS: '09:00', aE: '18:00', block: 50, morning: '영단어 암기' }
 };
+
+const HOBBIES = [
+  ['축구', '축구 연습'], ['농구', '농구'], ['야구', '야구 연습'], ['수영', '수영'], ['태권도', '태권도'],
+  ['배드민턴', '배드민턴'], ['테니스', '테니스'], ['줄넘기', '줄넘기'], ['피아노', '피아노 연습'],
+  ['바이올린', '바이올린 연습'], ['미술', '그림 그리기'], ['그림', '그림 그리기'], ['댄스', '댄스 연습'],
+  ['춤', '댄스 연습'], ['코딩', '코딩 공부'], ['독서', '책 읽기'], ['운동', '운동']
+];
 
 const $ = id => document.getElementById(id);
 const toM = s => { const [h, m] = (s || '00:00').split(':').map(Number); return h * 60 + m; };
 const fmt = m => { m = ((m % 1440) + 1440) % 1440; return String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0'); };
 
-let current = 'focus';
-
-// 프로필 선택 버튼 그리기
-const box = $('profiles');
-for (const [key, p] of Object.entries(PROFILES)) {
-  box.insertAdjacentHTML('beforeend',
-    `<input type="radio" name="profile" id="p-${key}" value="${key}"><label for="p-${key}"><b>${p.name}</b><span>${p.desc}</span></label>`);
+// 적은 글에서 대상, 요일, 공부 강도, 취미를 알아낸다
+function infer(text) {
+  const t = text.replace(/\s+/g, '');
+  const has = (...ws) => ws.some(w => t.includes(w));
+  let level = null;
+  if (has('초등', '초딩', '초1', '초2', '초3', '초4', '초5', '초6')) level = 'es';
+  else if (has('재수', '반수', 'N수', 'n수', '삼수')) level = 'retake';
+  else if (has('고등', '고딩', '고1', '고2', '고3', '고교', '수험생', '수능')) level = 'hs';
+  else if (has('중학', '중딩', '중1', '중2', '중3', '중등')) level = 'ms';
+  let day = 'weekday';
+  if (has('주말', '토요일', '일요일', '휴일')) day = 'weekend';
+  else if (has('방학')) day = 'vacation';
+  else if (has('시험', '중간고사', '기말', '고사')) day = 'exam';
+  const lv = level || 'ms';
+  let study = lv === 'hs' || lv === 'retake' || day === 'exam' || day === 'vacation';
+  if (has('공부', '집중', '열심', '최상위', '상위권', '전교', '성적', '고3', '수능')) study = true;
+  if (has('여유', '균형', '쉬엄', '편하게', '놀고')) study = false;
+  const h = HOBBIES.find(([w]) => t.includes(w));
+  return {
+    level: lv, guessed: !level && text.trim() !== '', day, study,
+    hobby: h ? h[1] : null,
+    senior: has('고3', '수능', '수험생'),
+    noAcad: has('학원없', '학원안', '학원X', '학원x', '학원은안', '혼자공부'),
+    yaja: has('야자', '야간자율'),
+    dokseo: has('독서실', '스터디카페')
+  };
 }
 
-function loadProfile(key) {
-  current = key;
-  const p = PROFILES[key];
-  $('p-' + key).checked = true;
-  $('wake').value = p.wake; $('sleep').value = p.sleep;
-  $('ac').checked = p.ac; $('aName').value = p.aName; $('aS').value = p.aS; $('aE').value = p.aE;
-  render();
+// 알아낸 내용으로 일과표 설정을 만든다
+function makeProfile(inf) {
+  const L = LEVELS[inf.level];
+  const p = {
+    mode: inf.day === 'weekend' || inf.day === 'vacation' ? 'weekend' : (inf.study ? 'study' : 'basic'),
+    study: inf.study, level: inf.level, day: inf.day, hobby: inf.hobby,
+    wake: L.wake, sleep: L.sleep, arrive: L.arrive, school: L.school, end: L.end,
+    block: L.block, morning: L.morning,
+    ac: !inf.noAcad, aName: '학원', aS: L.aS, aE: L.aE
+  };
+  if (inf.level === 'ms' && inf.study) { p.wake = '06:50'; p.aE = '19:00'; }
+  if (inf.level === 'retake') {
+    p.schoolLabel = '재수학원 (수업, 자습)'; p.arriveLabel = '도착, 오늘 공부 계획 세우기';
+    p.endLabel = '귀가'; p.dinnerAtSchool = true; p.ac = false; p.aName = '재수학원 자습';
+  }
+  if (inf.day === 'exam') {
+    p.morning = '암기 과목 외우기';
+    p.wake = { es: '07:00', ms: '06:30', hs: '06:00', retake: '06:00' }[inf.level];
+    p.sleep = { es: '22:00', ms: '23:30', hs: '00:30', retake: '00:00' }[inf.level];
+    if (inf.level === 'ms') p.aE = '19:00';
+  }
+  if (p.mode === 'weekend') {
+    p.wake = { es: '08:00', ms: '08:00', hs: '07:30', retake: '07:00' }[inf.level];
+    p.sleep = { es: '22:00', ms: '23:00', hs: '00:00', retake: '00:00' }[inf.level];
+    p.aS = '10:00'; p.aE = inf.level === 'es' ? '12:00' : '13:00';
+    if (inf.level === 'retake') { p.ac = !inf.noAcad; p.aS = '09:00'; p.aE = '18:00'; }
+    if (inf.day === 'vacation') { p.aE = inf.level === 'es' ? '12:00' : '14:00'; }
+  }
+  if (inf.yaja && inf.level !== 'es') { p.ac = true; p.aName = '야간 자율학습'; p.aS = '18:00'; p.aE = '21:30'; }
+  else if (inf.dokseo) { p.ac = true; p.aName = inf.dokseo && p.ac ? '독서실' : p.aName; if (p.mode !== 'weekend') { p.aS = '18:30'; p.aE = '21:30'; } }
+
+  // 공부 블록 이름
+  if (inf.day === 'exam') p.labels = ['시험 과목 개념 정리', '기출·문제집 풀이', '오답 노트', '암기 과목 외우기', '시험 범위 전체 훑기'];
+  else if (inf.level === 'es') p.labels = ['{hw} 숙제', '수학 문제집', '영어 단어', '책 읽기'];
+  else if (inf.level === 'retake') p.labels = ['오늘 배운 내용 복습', '오답 노트', '약한 과목 공부', '수능 기출 풀이'];
+  else if (inf.senior) p.labels = ['학교 과제', '수능 기출 풀이', '오늘 수업 복습', '탐구 과목 정리', '오답 노트'];
+  else if (inf.level === 'hs') p.labels = ['학교 과제, 수행평가', '오늘 수업 복습', '국·영·수 문제 풀이', '탐구 과목 정리', '오답 노트'];
+  else p.labels = ['{hw} 숙제', '오늘 수업 복습', '약한 과목 공부', '문제집 풀이', '다음 수업 예습'];
+
+  // 자기 전 마무리
+  if (p.mode === 'weekend') p.tail = [['샤워', 20], [inf.day === 'vacation' ? '내일 계획 세우기' : '다음 주 계획 세우기', 20]];
+  else if (inf.day === 'exam') p.tail = [['오늘 외운 것 다시 보기', 20], ['내일 공부할 과목 정하기', 10]];
+  else if (p.study) p.tail = [['암기 복습', 20], ['내일 계획 세우기, 가방 정리', 10]];
+  else p.tail = [['내일 준비물 챙기기', 10]];
+
+  // 제목
+  const dayName = { weekday: '평일', weekend: '주말', vacation: '방학', exam: '시험 기간' }[inf.day];
+  p.defaultTitle = `${LEVELS[inf.level].label} ${dayName} 일과표`;
+
+  // 규칙
+  let rules;
+  if (inf.day === 'exam') rules = ['시험 2주 전부터 이 표대로 하기', '휴대폰은 시험 끝날 때까지 최소한으로', '암기는 아침과 자기 전에', '시험 전날에도 6시간은 자기'];
+  else if (inf.day === 'vacation') rules = ['학기 중과 같은 시간에 일어나기', '오전에는 공부, 오후에는 활동', '지난 학기 약한 과목 다시 보기', '하루 한 번은 밖에 나가기'];
+  else if (p.mode === 'weekend') rules = ['평일보다 1시간 넘게 늦잠 자지 않기', '공부는 오전에 먼저 끝내기', '자유 시간은 오후에 몰아서', '일요일 밤에 다음 주 계획 세우기'];
+  else if (inf.level === 'retake') rules = ['매일 같은 시간에 일어나기', '50분 공부하고 10분 쉬기', '오답 노트는 그날 정리하기', '일주일에 반나절은 쉬기'];
+  else if (inf.level === 'es') rules = inf.study
+    ? ['40분 공부하고 10분 쉬기', '숙제는 놀기 전에 끝내기', '9시 반에는 잠자리에 들기']
+    : ['숙제 먼저, 놀기는 그다음', '게임과 영상은 하루 1시간', '10시 전에 자기'];
+  else if (p.study) rules = ['공부할 때 휴대폰은 다른 방에 두기', `${p.block}분 공부하고 10분 쉬기`, '배운 것은 그날 복습하기', inf.level === 'hs' ? '최소 6시간은 자기' : '7~8시간은 꼭 자기'];
+  else rules = ['숙제는 저녁 먹고 바로 하기', '휴대폰은 자유 시간에만 보기', inf.level === 'hs' ? '12시 반 전에 자기' : '11시 전에 자기'];
+  if (inf.hobby) rules.push(`${inf.hobby} 한 날도 복습 30분은 꼭 하기`);
+  p.rules = rules;
+
+  p.chips = [LEVELS[inf.level].label, dayName, p.study ? '공부 집중' : '기본'];
+  if (inf.hobby) p.chips.push(inf.hobby);
+  if (inf.noAcad) p.chips.push('학원 없음');
+  if (inf.yaja) p.chips.push('야자');
+  if (inf.dokseo) p.chips.push('독서실');
+  return p;
 }
+
+let profile = null;
+let signature = '';
 
 function readConfig() {
   return {
-    p: PROFILES[current],
+    p: profile,
     wake: toM($('wake').value), sleep: toM($('sleep').value),
     ac: $('ac').checked, aName: $('aName').value.trim() || '학원',
     aS: toM($('aS').value), aE: toM($('aE').value)
@@ -219,20 +328,23 @@ function readConfig() {
 
 // 빈 시간을 채울 활동 목록
 function makeQueue(c) {
-  const p = c.p;
+  const p = c.p, B = p.block;
+  const hobby = p.hobby ? [{ l: p.hobby, d: 60 }] : [];
+  const labels = p.labels.map(l => l.replace('{hw}', c.ac && c.aName === '학원' ? '학원' : '학교'));
   if (p.mode === 'basic') {
     return [
-      { l: c.ac ? `숙제 (학교, ${c.aName})` : '숙제', d: 60, study: true },
-      { l: '자유 시간 (휴대폰, TV)', d: 60 },
-      { l: '복습 또는 독서', d: 40, study: true },
+      { l: c.ac && c.aName === '학원' ? '숙제 (학교, 학원)' : '숙제', d: p.level === 'es' ? 40 : 60, study: true },
+      ...hobby,
+      { l: p.level === 'es' ? '놀기 (게임, 영상은 1시간)' : '자유 시간 (휴대폰, TV)', d: 60 },
+      { l: p.level === 'es' ? '책 읽기' : '복습 또는 독서', d: 40, study: true },
       { l: '자유 시간', d: 1e9 }
     ];
   }
-  if (p.mode === 'weekend') {
+  if (p.mode === 'weekend' && !p.study) {
     return [
       { l: '이번 주 배운 것 복습', d: 90, study: true },
       { l: '휴식', d: 20 },
-      { l: '운동 또는 산책', d: 60 },
+      ...(hobby.length ? hobby : [{ l: '운동 또는 산책', d: 60 }]),
       { l: '숙제, 수행평가 준비', d: 60, study: true },
       { l: '자유 시간 (게임, 친구)', d: 120 },
       { l: '다음 주 예습', d: 50, study: true },
@@ -240,12 +352,18 @@ function makeQueue(c) {
       { l: '자유 시간', d: 1e9 }
     ];
   }
-  const labels = p.labels.map(l => l.replace('{hw}', c.ac ? c.aName : '학교'));
+  let ls = labels;
+  if (p.mode === 'weekend' && p.level === 'retake') ls = ['이번 주 배운 내용 복습', '오답 노트', '약한 과목 공부', '수능 기출 풀이'];
+  else if (p.mode === 'weekend') ls = p.day === 'vacation'
+    ? ['지난 학기 복습', '다음 학기 예습', '약한 과목 공부', '문제집 풀이', '독서']
+    : ['이번 주 배운 것 복습', '숙제, 수행평가 준비', '약한 과목 공부', '다음 주 예습', '문제집 풀이'];
   const q = [];
   for (let i = 0; i < 14; i++) {
-    const idx = i < labels.length ? i : 1 + ((i - 1) % (labels.length - 1));
-    q.push({ l: labels[idx], d: 50, study: true });
+    const idx = i < ls.length ? i : 1 + ((i - 1) % (ls.length - 1));
+    q.push({ l: ls[idx], d: B, study: true });
     q.push({ l: '휴식', d: 10 });
+    if (i === 1 && (hobby.length || p.mode === 'weekend')) q.push(...(hobby.length ? hobby : [{ l: '운동 또는 산책', d: 60 }]));
+    if (i === 3 && p.mode === 'weekend') q.push({ l: '자유 시간', d: 90 });
   }
   q.push({ l: '휴식', d: 1e9 });
   return q;
@@ -270,7 +388,6 @@ function build(c) {
   const p = c.p, W = c.wake;
   let S = c.sleep; if (S <= W) S += 1440;
 
-  // 자기 전 마무리 일정
   const finish = (t, tail) => {
     let len = tail.reduce((a, x) => a + x[1], 0);
     if (S - len < t) {
@@ -299,7 +416,10 @@ function build(c) {
     }
     const meal = (at, dur, l) => {
       let s = at;
-      if (acad && s < acad.e && s + dur > acad.s) s = acad.e;
+      if (acad && s < acad.e && s + dur > acad.s) {
+        if (acad.e - acad.s >= 300) { const a = fixed.find(f => f.s === acad.s && f.e === acad.e); a.l += a.l.includes('포함') ? '' : ' (식사 포함)'; return; }
+        s = acad.e;
+      }
       fixed.push({ s, e: s + dur, l: s !== at ? `${l} (${c.aName} 끝나고)` : l });
     };
     meal(12 * 60, 60, '점심 식사');
@@ -311,7 +431,7 @@ function build(c) {
       push(f.s, f.l);
       t = Math.max(t, f.e);
     }
-    finish(t, [['샤워', 20], ['다음 주 계획 세우기', 20]]);
+    finish(t, p.tail.slice());
   } else {
     const study = p.mode === 'study';
     const arrive = toM(p.arrive), school = toM(p.school), E = toM(p.end), leave = arrive - 30;
@@ -322,10 +442,11 @@ function build(c) {
     if (study && extra >= 15) { const m = Math.min(30, extra); push(t, `${p.morning} (${m}분)`); t += m; }
     push(t, '아침 식사');
     push(leave, study ? '등교 (가는 길에 단어 듣기)' : '등교');
-    push(arrive, study ? '아침 자습 (오늘 수업 예습)' : '아침 자습');
-    push(school, '학교 수업');
+    push(arrive, p.arriveLabel || (study ? '아침 자습 (오늘 수업 예습)' : '아침 자습'));
+    push(school, p.schoolLabel || '학교 수업');
+    const out1 = p.endLabel || '하교';
 
-    let dinner = false;
+    let dinner = !!p.dinnerAtSchool;
     if (acad) {
       let { s: A, e: B } = acad;
       if (A < E) {
@@ -333,21 +454,21 @@ function build(c) {
         B = E + (B - A); A = E;
       }
       const gap = A - E;
-      if (gap >= 30 && A >= 17 * 60 + 30) {
-        push(E, '하교, 저녁 식사'); dinner = true;
+      if (!dinner && gap >= 30 && A >= 17 * 60 + 30) {
+        push(E, `${out1}, 저녁 식사`); dinner = true;
         if (gap > 40) fill(E + 40, A);
       } else if (gap > 40) {
-        push(E, '하교, 간식'); fill(E + 20, A);
+        push(E, `${out1}, 간식`); fill(E + 20, A);
       } else if (gap >= 5) {
-        push(E, '하교, 간식');
+        push(E, `${out1}, 간식`);
       } else {
-        push(E, '하교');
+        push(E, out1);
       }
-      push(A, study ? `${c.aName} (질문할 것 적어 가기)` : c.aName);
+      push(A, study && c.aName === '학원' ? '학원 (질문할 것 적어 가기)' : c.aName);
       t = B;
     } else {
-      push(E, '하교, 간식');
-      t = E + 20;
+      push(E, dinner ? out1 : `${out1}, 간식`);
+      t = E + (dinner ? 30 : 20);
     }
     if (!dinner) {
       if (t < 18 * 60) { fill(t, 18 * 60); t = 18 * 60; }
@@ -359,7 +480,6 @@ function build(c) {
     finish(t, p.tail.slice());
   }
 
-  // 정렬, 0분짜리 제거, 같은 활동 합치기
   out.sort((a, b) => a.s - b.s);
   const clean = [];
   out.forEach((x, i) => {
@@ -370,21 +490,38 @@ function build(c) {
   return { items: clean, warn };
 }
 
+function applyWho(force) {
+  const text = $('who').value;
+  const inf = infer(text);
+  const sig = JSON.stringify(inf);
+  profile = makeProfile(inf);
+  if (force || sig !== signature) {
+    signature = sig;
+    $('wake').value = profile.wake; $('sleep').value = profile.sleep;
+    $('ac').checked = profile.ac; $('aName').value = profile.aName; $('aS').value = profile.aS; $('aE').value = profile.aE;
+  }
+  const chips = profile.chips.map((c, i) => `<span class="chip${i === 0 && inf.guessed ? ' guess' : ''}">${c}</span>`).join('');
+  $('understood').innerHTML = `<span>이렇게 알아들었어요</span>${chips}`;
+  profile.guessed = inf.guessed;
+  render();
+}
+
 function render() {
   const c = readConfig();
   const { items, warn } = build(c);
+  if (profile.guessed) warn.unshift('학년을 알아보지 못해서 중학생 기준으로 만들었어요. "초등학생", "고등학생"처럼 적어 주세요.');
   const range = $('range').checked;
-  const who = $('who').value.trim();
-  const lines = [`[${who ? who + '의 ' : ''}${c.p.title}]`, ''];
+  let who = $('who').value.trim();
+  const title = who ? (who.endsWith('일과표') ? who : who + ' 일과표') : profile.defaultTitle;
+  const lines = [`[${title}]`, ''];
   items.forEach((x, i) => {
     const next = items[i + 1];
     const time = range && next ? `${fmt(x.s)}~${fmt(next.s)}` : fmt(x.s);
-    const pad = range ? 13 : 7;
-    lines.push(time.padEnd(pad, ' ') + x.l);
+    lines.push(time.padEnd(range ? 13 : 7, ' ') + x.l);
   });
   if ($('rules').checked) {
     lines.push('', '[규칙]');
-    c.p.rules.forEach(r => lines.push('- ' + r));
+    profile.rules.forEach(r => lines.push('- ' + r));
   }
   $('memo').textContent = lines.join('\n');
   $('warn').hidden = !warn.length;
@@ -400,19 +537,26 @@ function selectMemo() {
   const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
 }
 
+$('examples').innerHTML = EXAMPLES.map(e => `<button type="button">${e}</button>`).join('');
+$('examples').addEventListener('click', e => {
+  if (e.target.tagName !== 'BUTTON') return;
+  $('who').value = e.target.textContent;
+  applyWho(true);
+});
+
+let timer;
+$('who').addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => applyWho(false), 200); });
+$('form').addEventListener('input', e => { if (e.target.id !== 'who') render(); });
+$('form').addEventListener('submit', e => e.preventDefault());
+
 $('copy').addEventListener('click', () => {
   const text = $('memo').textContent;
   const done = () => { $('toast').textContent = '복사했어요. 메모장에 붙여 넣으세요.'; };
   const fallback = () => { selectMemo(); $('toast').textContent = '자동 복사가 막혀 있어요. 선택된 글을 길게 눌러 복사하세요.'; };
-  try {
-    navigator.clipboard.writeText(text).then(done, fallback);
-  } catch (e) { fallback(); }
+  try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
 });
 $('select').addEventListener('click', () => { selectMemo(); $('toast').textContent = '전체 선택했어요.'; });
 
-$('profiles').addEventListener('change', e => loadProfile(e.target.value));
-$('form').addEventListener('input', e => { if (e.target.name !== 'profile') render(); });
-$('form').addEventListener('submit', e => e.preventDefault());
-
-loadProfile(current);
+$('who').value = '공부에 집중하고 싶은 중학생';
+applyWho(true);
 </script>
