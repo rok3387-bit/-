@@ -69,7 +69,8 @@ input[type="text"], select {
 input[type="text"]:focus-visible, select:focus-visible, button:focus-visible {
   outline: 2px solid var(--accent); outline-offset: 2px;
 }
-.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.opts { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.rule { font-size: 13px; color: var(--muted); margin: 0; }
 .opts label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
 .actions { display: flex; gap: 10px; flex-wrap: wrap; }
 button {
@@ -106,6 +107,7 @@ button {
   <header>
     <h1>세 줄 자기소개</h1>
     <p>성격, 별명, 좋아하는 것. 세 가지만 적으면 자기소개서를 써 드려요.</p>
+    <p class="rule">적은 단어만 써요. 없는 일화나 감정, 다짐은 덧붙이지 않아요.</p>
   </header>
 
   <div class="grid">
@@ -130,13 +132,6 @@ button {
             <option value="club">동아리 지원</option>
             <option value="job">취업·아르바이트</option>
             <option value="free">자유롭게</option>
-          </select>
-        </label>
-        <label for="len">분량
-          <select id="len">
-            <option value="short">짧게 (3~4문장)</option>
-            <option value="mid" selected>보통 (한 문단)</option>
-            <option value="long">길게 (세 문단)</option>
           </select>
         </label>
       </div>
@@ -173,7 +168,6 @@ const PURPOSE = {
   job: "취업 또는 아르바이트 지원서",
   free: "어디에나 쓸 수 있는 일반적인 자기소개"
 };
-const LEN = { short: "3~4문장", mid: "한 문단(6~8문장)", long: "세 문단, 400~600자" };
 
 function setText(t) {
   out.textContent = t;
@@ -190,34 +184,26 @@ function josa(word, a, b) {
   if (c < 0xac00 || c > 0xd7a3) return a;
   return (c - 0xac00) % 28 ? a : b;
 }
-function templateIntro(trait, nick, like, purpose, len) {
+// "~다"로 끝나는 말을 "~습니다/~ㅂ니다"로 바꿈 (예: 강하다 → 강합니다, 밝다 → 밝습니다)
+function politeEnding(t) {
+  t = t.replace(/[.。]$/, "");
+  if (!/다$/.test(t) || t.length < 2) return null;
+  const stem = t.slice(0, -1), last = stem.charCodeAt(stem.length - 1);
+  if (last < 0xac00 || last > 0xd7a3) return null;
+  if ((last - 0xac00) % 28) return stem + "습니다";
+  return stem.slice(0, -1) + String.fromCharCode(last + 17) + "니다"; // ㅂ 받침 추가
+}
+// 입력한 단어 외에는 문장을 잇는 말과 인사만 씀
+function templateIntro(trait, nick, like, purpose) {
   const n = splitNick(nick);
-  const traitAdj = trait.replace(/다$/, "");
-  const nickLine = n.why
-    ? `친구들은 저를 '${n.name}'${josa(n.name, "이라고", "라고")} 부릅니다. ${n.why.replace(/서$/, "서")} 붙은 별명인데, 저도 꽤 마음에 들어요.`
-    : `친구들은 저를 '${n.name}'${josa(n.name, "이라고", "라고")} 가장 많이 부릅니다.`;
-  const open = {
-    school: "안녕하세요, 만나서 반가워요!",
-    club: "안녕하세요, 이 동아리에 지원하게 된 사람입니다.",
-    job: "안녕하십니까, 지원자 소개를 드리겠습니다.",
-    free: "안녕하세요, 저를 소개합니다."
-  }[purpose];
-  const close = {
-    school: "1년 동안 잘 지내 봐요!",
-    club: "함께 활동하며 즐겁게 성장하고 싶습니다. 감사합니다.",
-    job: "맡은 일을 끝까지 책임지는 사람이 되겠습니다. 감사합니다.",
-    free: "앞으로 잘 부탁드립니다."
-  }[purpose];
-  const s1 = `저는 ${traitAdj}는 말을 자주 듣습니다.`;
-  const s2 = `좋아하는 것은 ${like}입니다.`;
-  const s3 = `${like}${josa(like, "을", "를")} 할 때면 시간 가는 줄 모르고, 그 시간이 저를 더 저답게 만들어 줍니다.`;
-  if (len === "short") return [open, s1, nickLine, s2, close].join(" ");
-  if (len === "mid") return [open, s1, "이런 성격 덕분에 무슨 일이든 대충 넘기지 않으려고 노력합니다.", nickLine, s2, s3, close].join(" ");
-  return [
-    [open, s1, "이런 성격 덕분에 무슨 일이든 대충 넘기지 않고, 작은 부분까지 신경 쓰려고 노력합니다."].join(" "),
-    [nickLine, "별명처럼 저는 주변 사람들에게 친근하게 다가가는 편입니다."].join(" "),
-    [s2, s3, close].join(" ")
-  ].join("\n\n");
+  const p = politeEnding(trait);
+  const s1 = p ? `저는 ${p}` + "." : `제 성격은 ${trait}${josa(trait, "입니다", "입니다")}.`;
+  const why = n.why ? (/서$/.test(n.why) ? ` ${n.why} 붙은 별명입니다.` : ` 별명이 생긴 이유는 ${n.why}입니다.`) : "";
+  const s2 = `가장 많이 불린 별명은 '${n.name}'입니다.` + why;
+  const s3 = `제가 좋아하는 것은 ${like}입니다.`;
+  const open = { school: "안녕하세요.", club: "안녕하세요.", job: "안녕하십니까.", free: "안녕하세요." }[purpose];
+  const close = { school: "잘 부탁해요.", club: "감사합니다.", job: "감사합니다.", free: "잘 부탁드립니다." }[purpose];
+  return [open, s1, s2, s3, close].join(" ");
 }
 
 let sample = null, ctrl = null;
@@ -228,25 +214,29 @@ let sample = null, ctrl = null;
 async function write() {
   const trait = $("trait").value.trim(), nick = $("nick").value.trim(), like = $("like").value.trim();
   if (!trait || !nick || !like) { status.textContent = "세 칸을 모두 채워 주세요."; return; }
-  const purpose = $("purpose").value, len = $("len").value;
+  const purpose = $("purpose").value;
   $("badge").textContent = "내가 입력한 내용으로 쓴 글";
 
   if (!sample) {
-    setText(templateIntro(trait, nick, like, purpose, len));
+    setText(templateIntro(trait, nick, like, purpose));
     status.textContent = "기본 문장 틀로 썼어요.";
     return;
   }
   ctrl?.abort(); ctrl = new AbortController();
   $("go").disabled = true; status.textContent = "쓰는 중…"; setText("");
   const prompt =
-`다음 세 가지 정보를 바탕으로 한국어 자기소개서를 써 주세요.
+`아래 세 가지 정보만으로 짧은 한국어 자기소개를 써 주세요.
 - 성격: ${trait}
 - 가장 많이 불린 별명: ${nick}
 - 좋아하는 것: ${like}
 
-용도: ${PURPOSE[purpose]}
-분량: ${LEN[len]}
-조건: 세 가지 정보를 모두 자연스럽게 녹일 것. 별명은 생긴 이유가 있으면 일화처럼 살릴 것. 용도에 맞는 말투(발표는 친근하게, 지원서는 정중하게)를 쓸 것. 없는 사실(학교명, 이름, 경력 등)을 지어내지 말 것. 제목·설명·따옴표 없이 자기소개 본문만 출력할 것.`;
+용도: ${PURPOSE[purpose]} (발표는 친근한 말투, 지원서는 정중한 말투)
+
+반드시 지킬 것:
+1. 위에 적힌 단어와 내용만 쓸 것. 적힌 단어는 바꾸거나 비슷한 말로 바꾸지 말고 그대로 쓸 것.
+2. 적혀 있지 않은 내용은 하나도 덧붙이지 말 것. 일화, 감정, 이유, 예시, 장점 해석, 앞으로의 다짐, 학교명, 이름, 경력 모두 금지.
+3. 덧붙여도 되는 것은 문장을 잇는 말(저는, ~입니다, 그리고)과 처음의 인사, 마지막의 "감사합니다/잘 부탁드립니다"뿐.
+4. 4~5문장 정도. 제목, 설명, 따옴표 없이 본문만 출력할 것.`;
   try {
     const r = await sample(prompt, {
       signal: ctrl.signal, cache: false,
@@ -257,7 +247,7 @@ async function write() {
   } catch (e) {
     if (e?.name === "AbortError") return;
     if (e?.code === "not_granted") sample = null;
-    setText(templateIntro(trait, nick, like, purpose, len));
+    setText(templateIntro(trait, nick, like, purpose));
     status.textContent = e?.code === "rate_limited"
       ? "요청이 많아 잠시 기본 문장 틀로 썼어요. 조금 뒤 다시 써 보세요."
       : "AI를 쓸 수 없어 기본 문장 틀로 썼어요.";
@@ -282,6 +272,6 @@ $("copy").addEventListener("click", async () => {
 });
 
 // 처음 열면 예시 입력으로 쓴 글을 보여 줌
-setText(templateIntro($("trait").value, $("nick").value, $("like").value, "school", "mid"));
+setText(templateIntro($("trait").value, $("nick").value, $("like").value, "school"));
 status.textContent = "예시예요. 내 정보로 바꿔서 써 보세요.";
 </script>
