@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>세 줄 자기소개</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: 왼쪽은 세 장의 이름표 카드(입력), 오른쪽은 편지지(결과). 좁으면 위아래로 쌓임 */
+:root {
+  --bg: #f3f4f7;
+  --paper: #ffffff;
+  --ink: #1d2433;
+  --muted: #5d6578;
+  --line: #d9dde6;
+  --accent: #2f5bd3;
+  --accent-soft: #e6ecfb;
+  --tag1: #f6e7c8;
+  --tag2: #d9eedd;
+  --tag3: #f4dbe1;
+  --font-display: "Gowun Batang", "Nanum Myeongjo", serif;
+  --font-body: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14171f; --paper: #1d212c; --ink: #e8ebf2; --muted: #9aa2b5; --line: #323848;
+    --accent: #8aa8ff; --accent-soft: #263255;
+    --tag1: #4a3f26; --tag2: #263f2d; --tag3: #4a2a33;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #14171f; --paper: #1d212c; --ink: #e8ebf2; --muted: #9aa2b5; --line: #323848;
+  --accent: #8aa8ff; --accent-soft: #263255;
+  --tag1: #4a3f26; --tag2: #263f2d; --tag3: #4a2a33;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+}
+.wrap {
+  max-width: 1040px; margin: 0 auto;
+  padding-block: 32px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px;
+}
+header h1 {
+  font-family: var(--font-display); font-weight: 700;
+  font-size: clamp(1.8rem, 4vw, 2.4rem); margin: 0; text-wrap: balance;
+}
+header p { margin: 6px 0 0; color: var(--muted); }
+.grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 24px; align-items: start; }
+@media (max-width: 820px) { .grid { grid-template-columns: minmax(0, 1fr); } }
+
+form { display: flex; flex-direction: column; gap: 14px; }
+.tag {
+  border-radius: 12px; padding: 14px 16px 16px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.tag:nth-of-type(1) { background: var(--tag1); }
+.tag:nth-of-type(2) { background: var(--tag2); }
+.tag:nth-of-type(3) { background: var(--tag3); }
+.tag label { font-weight: 700; display: flex; justify-content: space-between; gap: 8px; }
+.tag label small { font-weight: 400; color: var(--muted); font-size: 12px; }
+input[type="text"], select {
+  width: 100%; font: inherit; color: var(--ink);
+  background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+  padding: 10px 12px;
+}
+input[type="text"]:focus-visible, select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tag .sub { font-weight: 400; font-size: 13px; color: var(--muted); }
+.tag input.opt { font-size: 14px; padding: 8px 12px; }
+.name { display: flex; flex-direction: column; gap: 6px; font-weight: 700; }
+.name small { font-weight: 400; color: var(--muted); font-size: 12px; }
+.rule { font-size: 13px; color: var(--muted); margin: 0; }
+.opts label { font-size: 13px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.actions { display: flex; gap: 10px; flex-wrap: wrap; }
+button {
+  font: inherit; font-weight: 700; cursor: pointer; border-radius: 8px;
+  padding: 11px 18px; border: 1px solid transparent;
+}
+.primary { background: var(--accent); color: var(--paper); flex: 1; }
+.primary:disabled { opacity: .6; cursor: wait; }
+.ghost { background: transparent; color: var(--ink); border-color: var(--line); }
+.ghost:hover { background: var(--accent-soft); }
+
+.letter {
+  background: var(--paper); border: 1px solid var(--line); border-radius: 12px;
+  padding: 24px 24px 20px; display: flex; flex-direction: column; gap: 14px;
+  min-width: 0;
+}
+.letter-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.letter-head h2 { font-family: var(--font-display); font-size: 1.3rem; margin: 0; }
+.badge { font-size: 12px; color: var(--accent); background: var(--accent-soft); padding: 3px 10px; border-radius: 999px; }
+#out {
+  font-family: var(--font-display); font-size: 1.08rem; line-height: 2;
+  white-space: pre-wrap; word-break: keep-all; overflow-wrap: anywhere;
+  min-height: 12em; margin: 0;
+  background-image: linear-gradient(transparent calc(2em - 1px), var(--line) 1px);
+  background-size: 100% 2em;
+}
+.foot { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.status { font-size: 13px; color: var(--muted); }
+.count { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .primary, .ghost { transition: background .15s; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>세 줄 자기소개</h1>
+    <p>성격, 별명, 좋아하는 것. 세 가지만 적으면 자기소개서를 써 드려요.</p>
+    <p class="rule">적은 단어만 써요. 없는 일화나 감정, 다짐은 덧붙이지 않아요. 더 길게 쓰고 싶으면 (선택) 칸을 채워 주세요.</p>
+  </header>
+
+  <div class="grid">
+    <form id="f">
+      <label class="name" for="name">이름 <small>(선택) 적으면 소개에 넣어요</small>
+        <input type="text" id="name" maxlength="20" value="">
+      </label>
+      <div class="tag">
+        <label for="trait">성격 <small>예: 꼼꼼하고 책임감이 강하다</small></label>
+        <input type="text" id="trait" maxlength="80" required value="꼼꼼하고 책임감이 강하다">
+        <label class="sub" for="traitWhen">(선택) 이 성격이 잘 드러나는 때</label>
+        <input type="text" class="opt" id="traitWhen" maxlength="80" value="모둠 과제를 할 때">
+      </div>
+      <div class="tag">
+        <label for="nick">가장 많이 불린 별명 <small>예: 다람쥐</small></label>
+        <input type="text" id="nick" maxlength="40" required value="다람쥐">
+        <label class="sub" for="nickWhy">(선택) 별명이 생긴 이유</label>
+        <input type="text" class="opt" id="nickWhy" maxlength="80" value="항상 간식을 챙겨 다녀서">
+      </div>
+      <div class="tag">
+        <label for="like">좋아하는 것 <small>예: 새로운 노래 찾아 듣기</small></label>
+        <input type="text" id="like" maxlength="80" required value="새로운 노래 찾아 듣기">
+        <label class="sub" for="likeWhy">(선택) 좋아하는 이유</label>
+        <input type="text" class="opt" id="likeWhy" maxlength="80" value="기분이 좋아져서">
+      </div>
+
+      <div class="opts">
+        <label for="purpose">어디에 쓰나요?
+          <select id="purpose">
+            <option value="school">학교·새 학기 발표</option>
+            <option value="club">동아리 지원</option>
+            <option value="job">취업·아르바이트</option>
+            <option value="free">자유롭게</option>
+          </select>
+        </label>
+        <label for="len">분량
+          <select id="len">
+            <option value="short">짧게 (한 문단)</option>
+            <option value="long" selected>길게 (여러 문단)</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="primary" id="go">자기소개서 쓰기</button>
+        <button type="button" class="ghost" id="clear">비우기</button>
+      </div>
+    </form>
+
+    <section class="letter" aria-live="polite">
+      <div class="letter-head">
+        <h2>나의 자기소개</h2>
+        <span class="badge" id="badge">예시 입력으로 쓴 글</span>
+      </div>
+      <p id="out"></p>
+      <div class="foot">
+        <span class="status"><span id="status"></span> <span class="count" id="count"></span></span>
+        <div class="actions">
+          <button type="button" class="ghost" id="again">다시 쓰기</button>
+          <button type="button" class="ghost" id="copy">복사</button>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const out = $("out"), status = $("status"), count = $("count");
+const FIELDS = ["name", "trait", "traitWhen", "nick", "nickWhy", "like", "likeWhy"];
+const PURPOSE = {
+  school: "새 학기 반 친구들 앞에서 하는 발표",
+  club: "동아리 지원서",
+  job: "취업 또는 아르바이트 지원서",
+  free: "어디에나 쓸 수 있는 일반적인 자기소개"
+};
+
+function setText(t) {
+  out.textContent = t;
+  count.textContent = t ? "· " + t.replace(/\s/g, "").length + "자" : "";
+}
+function hasBatchim(word) {
+  const c = word.charCodeAt(word.length - 1);
+  return c >= 0xac00 && c <= 0xd7a3 && (c - 0xac00) % 28 !== 0;
+}
+const josa = (w, a, b) => (hasBatchim(w) ? a : b);
+const clean = (t) => t.trim().replace(/[.。]$/, "");
+
+// "~다" → "~습니다/~ㅂ니다" (강하다 → 강합니다, 밝다 → 밝습니다)
+function politeEnding(t) {
+  if (!/다$/.test(t) || t.length < 2) return null;
+  const stem = t.slice(0, -1), last = stem.charCodeAt(stem.length - 1);
+  if (last < 0xac00 || last > 0xd7a3) return null;
+  if ((last - 0xac00) % 28) return stem + "습니다";
+  return stem.slice(0, -1) + String.fromCharCode(last + 17) + "니다";
+}
+// 이유 문장: "~서/~때문에"로 끝나면 그대로 잇고, 아니면 "이유는 ~입니다"
+function reasonLine(why, tail, subject) {
+  if (/(서|때문에)$/.test(why)) return `${why} ${tail}`;
+  return `${subject} ${why}${josa(why, "입니다", "입니다")}.`;
+}
+
+// 입력한 단어 외에는 문장을 잇는 말, 순서를 알리는 말, 인사만 씀
+function templateIntro(v, purpose, len) {
+  const p = politeEnding(v.trait);
+  const traitLine = p ? `저는 ${p}.` : `제 성격은 ${v.trait}입니다.`;
+  const nickLine = `가장 많이 불린 별명은 '${v.nick}'입니다.`;
+  const likeLine = `제가 좋아하는 것은 ${v.like}입니다.`;
+  const whenLine = v.traitWhen ? `이 성격은 ${v.traitWhen} 잘 드러납니다.` : "";
+  const nickWhyLine = v.nickWhy ? reasonLine(v.nickWhy, "붙은 별명입니다.", "별명이 생긴 이유는") : "";
+  const likeWhyLine = v.likeWhy ? reasonLine(v.likeWhy, `${v.like}${josa(v.like, "을", "를")} 좋아합니다.`, "좋아하는 이유는") : "";
+  const hi = { school: "안녕하세요.", club: "안녕하세요.", job: "안녕하십니까.", free: "안녕하세요." }[purpose];
+  const bye = { school: "잘 부탁해요.", club: "감사합니다.", job: "감사합니다.", free: "잘 부탁드립니다." }[purpose];
+  const nameLine = v.name ? `제 이름은 ${v.name}입니다.` : "";
+  const j = (arr) => arr.filter(Boolean).join(" ");
+
+  if (len === "short") return j([hi, nameLine, traitLine, whenLine, nickLine, nickWhyLine, likeLine, likeWhyLine, bye]);
+
+  const me = v.name ? `저 ${v.name}` : "저";
+  return [
+    j([hi, nameLine, "저를 세 가지로 소개하겠습니다. 바로 성격, 별명, 그리고 좋아하는 것입니다."]),
+    j(["먼저 제 성격입니다.", traitLine, whenLine]),
+    j(["다음은 제 별명입니다.", nickLine, nickWhyLine]),
+    j(["마지막으로 좋아하는 것을 소개합니다.", likeLine, likeWhyLine]),
+    j([`정리하면, 성격은 '${v.trait}', 별명은 '${v.nick}', 좋아하는 것은 '${v.like}'. 이것이 ${me}입니다.`, bye])
+  ].join("\n\n");
+}
+
+function readInputs() {
+  const v = {};
+  FIELDS.forEach((id) => (v[id] = clean($(id).value)));
+  return v;
+}
+
+let sample = null, ctrl = null;
+(async () => {
+  try { sample = await window.claude?.use?.("sample"); } catch { sample = null; }
+})();
+
+function buildPrompt(v, purpose, len) {
+  const extra = [
+    v.name && `- 이름: ${v.name}`,
+    v.traitWhen && `- 성격이 잘 드러나는 때: ${v.traitWhen}`,
+    v.nickWhy && `- 별명이 생긴 이유: ${v.nickWhy}`,
+    v.likeWhy && `- 좋아하는 이유: ${v.likeWhy}`
+  ].filter(Boolean).join("\n");
+  const shape = len === "long"
+    ? "5개 문단: (1) 인사와 '성격, 별명, 좋아하는 것 세 가지로 소개하겠다'는 안내 (2) 성격 (3) 별명 (4) 좋아하는 것 (5) 세 가지를 다시 한 번 정리하고 맺는 인사. 문단 사이는 빈 줄."
+    : "한 문단, 5~7문장.";
+  return `아래 정보만으로 한국어 자기소개를 써 주세요.
+- 성격: ${v.trait}
+- 가장 많이 불린 별명: ${v.nick}
+- 좋아하는 것: ${v.like}
+${extra}
+
+용도: ${PURPOSE[purpose]} (발표는 친근한 말투, 지원서는 정중한 말투)
+형식: ${shape}
+
+반드시 지킬 것:
+1. 위에 적힌 단어와 내용만 쓸 것. 적힌 단어는 비슷한 말로 바꾸지 말고 그대로 쓸 것.
+2. 적혀 있지 않은 내용은 하나도 덧붙이지 말 것. 일화, 감정, 예시, 장점 해석, 앞으로의 다짐, 학교명, 경력 모두 금지. 적혀 있지 않은 항목(예: 이유)은 언급하지 말 것.
+3. 덧붙여도 되는 것은 문장을 잇는 말(저는, ~입니다, 그리고), 순서를 알리는 말(먼저, 다음은, 마지막으로, 정리하면), 처음과 마지막의 인사뿐.
+4. 길이는 위 내용을 순서대로 소개하고 마지막에 다시 정리하는 방식으로만 늘릴 것.
+5. 제목, 설명, 따옴표 없이 본문만 출력할 것.`;
+}
+
+async function write() {
+  const v = readInputs();
+  if (!v.trait || !v.nick || !v.like) { status.textContent = "성격, 별명, 좋아하는 것 세 칸은 꼭 채워 주세요."; return; }
+  const purpose = $("purpose").value, len = $("len").value;
+  $("badge").textContent = "내가 입력한 내용으로 쓴 글";
+
+  if (!sample) {
+    setText(templateIntro(v, purpose, len));
+    status.textContent = "기본 문장 틀로 썼어요.";
+    return;
+  }
+  ctrl?.abort(); ctrl = new AbortController();
+  $("go").disabled = true; status.textContent = "쓰는 중…"; setText("");
+  try {
+    const r = await sample(buildPrompt(v, purpose, len), {
+      signal: ctrl.signal, cache: false,
+      onText: ({ text }) => setText(text)
+    });
+    setText(r.text.trim());
+    status.textContent = "Claude가 썼어요.";
+  } catch (e) {
+    if (e?.name === "AbortError") return;
+    if (e?.code === "not_granted") sample = null;
+    setText(templateIntro(v, purpose, len));
+    status.textContent = e?.code === "rate_limited"
+      ? "요청이 많아 잠시 기본 문장 틀로 썼어요. 조금 뒤 다시 써 보세요."
+      : "AI를 쓸 수 없어 기본 문장 틀로 썼어요.";
+  } finally {
+    $("go").disabled = false;
+  }
+}
+
+$("f").addEventListener("submit", (e) => { e.preventDefault(); write(); });
+$("again").addEventListener("click", write);
+$("clear").addEventListener("click", () => {
+  FIELDS.forEach((id) => ($(id).value = ""));
+  setText(""); status.textContent = ""; $("trait").focus();
+});
+$("copy").addEventListener("click", async () => {
+  try { await navigator.clipboard.writeText(out.textContent); status.textContent = "복사했어요."; }
+  catch {
+    const r = document.createRange(); r.selectNodeContents(out);
+    const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+    status.textContent = "글을 선택해 두었어요. Ctrl+C로 복사하세요.";
+  }
+});
+
+setText(templateIntro(readInputs(), "school", "long"));
+status.textContent = "예시예요. 내 정보로 바꿔서 써 보세요.";
+</script>
+</body>
+</html>
